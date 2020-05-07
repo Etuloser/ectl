@@ -10,11 +10,11 @@
 # set -x 等价于 set -o xtrace，效果为显示打印结果为哪条命令产生的
 # set -e 等价于 set -o errexit，效果为遇到错误终止脚本执行
 # set -o pipefail 弥补了 set -e 无法判断管道命令中子命令执行失败的情况
-set -euxo pipefail
+set -euo pipefail
 
 #--- Main Func ------------------------------------
 function main(){
-	echo 'success'
+  echo $1
 }
 
 # $# 参数个数
@@ -23,4 +23,6 @@ function main(){
 # $@, $* 所有参数
 # $$ 脚本执行的进程id
 # $? 上一条命令执行结果，0正常，1异常
+# 函数调用不需要带括号
+# 函数传参时,如果参数有空格,会被截断当成两个变量,加双引号可以避免这个问题
 main "$@"

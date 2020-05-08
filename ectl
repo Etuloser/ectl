@@ -12,6 +12,13 @@
 # set -o pipefail 弥补了 set -e 无法判断管道命令中子命令执行失败的情况
 set -euo pipefail
 
+function set_chrony() {
+# vim /etc/chrony.conf
+# 常用命令
+# chronyc source -v
+# systemctl restart chronyd
+}
+
 function usage() {
   cat <<EOF
 Usage: ectl [options] [args]
@@ -22,8 +29,12 @@ EOF
 
 #--- Main Func ------------------------------------
 function main() {
-  if [ "$1" == "-h" ]; then
+  if [ "$#" == 0 ]; then
     usage
+  elif [  "$1" == "-h" ]; then
+    usage
+  else
+    $@
   fi
 }
 
@@ -36,3 +47,4 @@ function main() {
 # 函数调用不需要带括号
 # 函数传参时,如果参数有空格,会被截断当成两个变量,加双引号可以避免这个问题
 main "$@"
+

@@ -12,9 +12,19 @@
 # set -o pipefail 弥补了 set -e 无法判断管道命令中子命令执行失败的情况
 set -euo pipefail
 
+function usage() {
+  cat <<EOF
+Usage: ectl [options] [args]
+  options: -{h}
+    -h		get help info
+EOF
+}
+
 #--- Main Func ------------------------------------
-function main(){
-  echo $1
+function main() {
+  if [ "$1" == "-h" ]; then
+    usage
+  fi
 }
 
 # $# 参数个数

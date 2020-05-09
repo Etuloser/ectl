@@ -12,6 +12,102 @@
 # set -o pipefail 弥补了 set -e 无法判断管道命令中子命令执行失败的情况
 set -euo pipefail
 
+# default version, can be overridden by cmd line options
+export DOCKER_VER=18.09.7
+export REGISTRY_MIRROR=CN
+
+function install_docker() {
+  # check if a container runtime is already installed
+  systemctl status docker|grep Active|grep -q running && { echo "[WARN] docker is already running."; return 0; }
+  systemctl status containerd|grep Active|grep -q running && { echo "[ERROR] containerd is running, unsupported."; exit 1; }
+  DOCKER_URL="https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/static/stable/x86_64/docker-${DOCKER_VER}.tgz"
+  mkdir -p /opt/kube/bin /etc/docker /etc/ansible/down
+  
+  if [[ -f "/etc/ansible/down/docker-${DOCKER_VER}.tgz" ]];then
+    echo "[INFO] docker binaries already existed"
+  else
+    echo -e "[INFO] \033[33mdownloading docker binaries\033[0m $DOCKER_VER"
+    if [[ -e /usr/bin/curl ]];then
+      curl -C- -O --retry 3 "$DOCKER_URL" || { echo "[ERROR] downloading docker failed"; exit 1; }
+    else
+      wget -c "$DOCKER_URL" || { echo "[ERROR] downloading docker failed"; exit 1; }
+    fi
+    mv ./docker-${DOCKER_VER}.tgz /etc/ansible/down
+  fi
+
+  tar zxf /etc/ansible/down/docker-${DOCKER_VER}.tgz -C /etc/ansible/down && \
+  mv /etc/ansible/down/docker/* /opt/kube/bin && \
+  ln -sf /opt/kube/bin/docker /bin/docker
+
+  echo "[INFO] generate docker service file"
+  cat > /etc/systemd/system/docker.service << EOF
+[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.io
+[Service]
+Environment="PATH=/opt/kube/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+ExecStart=/opt/kube/bin/dockerd
+ExecStartPost=/sbin/iptables -I FORWARD -s 0.0.0.0/0 -j ACCEPT
+ExecReload=/bin/kill -s HUP \$MAINPID
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Delegate=yes
+KillMode=process
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # configuration for dockerd
+  echo "[INFO] generate docker config file"
+  if [[ "$REGISTRY_MIRROR" == CN ]];then
+    echo "[INFO] prepare register mirror for $REGISTRY_MIRROR"
+    cat > /etc/docker/daemon.json << EOF
+{
+  "registry-mirrors": [
+    "https://dockerhub.azk8s.cn",
+    "https://docker.mirrors.ustc.edu.cn",
+    "http://hub-mirror.c.163.com"
+  ],
+  "max-concurrent-downloads": 10,
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+    },
+  "data-root": "/var/lib/docker"
+}
+EOF
+  else
+    echo "[INFO] standard config without registry mirrors"
+    cat > /etc/docker/daemon.json << EOF
+{
+  "max-concurrent-downloads": 10,
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+    },
+  "data-root": "/var/lib/docker"
+}
+EOF
+  fi
+
+  if [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
+    echo "[INFO] turn off selinux in CentOS/Redhat"
+    setenforce 0
+    echo "SELINUX=disabled" > /etc/selinux/config
+  fi
+
+  echo "[INFO] enable and start docker"
+  systemctl enable docker
+  systemctl daemon-reload && systemctl restart docker && sleep 8
+}
+
 function set_chrony() {
 # vim /etc/chrony.conf
 # 常用命令

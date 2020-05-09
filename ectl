@@ -28,6 +28,8 @@ Usage: ectl [options] [args]
 EOF
 }
 
+# 用于升级 CentOS7 内核
+# 脚本执行完以后需重启机器
 function update_kernel() {
   rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
   if [ -z  `rpm -qa|grep elrepo-release` ]; then

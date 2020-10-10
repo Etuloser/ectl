@@ -15,6 +15,7 @@ set -euo pipefail
 # default version, can be overridden by cmd line options
 export DOCKER_VER=18.09.7
 export REGISTRY_MIRROR=CN
+export KUBEASZ_VER=2.0.2
 
 function install_docker() {
   # check if a container runtime is already installed
@@ -108,6 +109,12 @@ EOF
   systemctl daemon-reload && systemctl restart docker && sleep 8
 }
 
+function get_kubeasz() {
+  # check if kubeasz is already existed
+  [[ -d "/etc/ansible/roles/kube-node" ]] && { echo "[WARN] kubeasz already existed"; return 0; }
+  echo -e "[INFO] \033[33mdownloading kubeasz\033[0m $KUBEASZ_VER"
+}
+
 function set_chrony() {
 # vim /etc/chrony.conf
 # 常用命令
@@ -117,10 +124,12 @@ function set_chrony() {
 }
 
 function usage() {
-  cat <<EOF
+cat <<  EOF
 Usage: ectl [options] [args]
   options: -{h}
     -h		get help info
+  options: -{i} <dirname>
+    -i          init docker-compose file tpl
 EOF
 }
 
@@ -139,12 +148,52 @@ function update_kernel() {
   fi
 }
 
+function init_docker_tpl() {
+  mkdir $1
+  cat >> ./$1/Makefile << EOF
+NAME="$1"
+
+up:
+	docker-compose up -d
+down:
+	docker-compose down -v
+restart:
+	docker restart \${NAME}
+logs:
+	docker logs -f \${NAME}
+exec:
+	docker exec -it \${NAME} sh
+EOF
+  cat >> ./$1/docker-compose.yaml << EOF
+version: "3.7"
+services:
+
+  $1:
+    image: 
+    container_name: 
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - /etc/localtime:/etc/localtime
+    networks:
+      - internal
+
+networks:
+  internal:
+    external: true
+EOF
+echo -e "\e[32mSuccess!\e[0m"
+}
+
 #--- Main Func ------------------------------------
 function main() {
   if [ "$#" == 0 ]; then
     usage
   elif [  "$1" == "-h" ]; then
     usage
+  elif [[ "$1" == "-i" && "$#" == 2 ]]; then
+    init_docker_tpl "$2"
   else
     $@
   fi
@@ -159,4 +208,3 @@ function main() {
 # 函数调用不需要带括号
 # 函数传参时,如果参数有空格,会被截断当成两个变量,加双引号可以避免这个问题
 main "$@"
-

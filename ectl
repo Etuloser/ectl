@@ -130,7 +130,54 @@ Usage: ectl [options] [args]
     -h		get help info
   options: -{i} <dirname>
     -i          init docker-compose file tpl
+  options: install <service>
+    install     install service online
+  options: package <service>
+    package     package service 
 EOF
+}
+
+function install_docker_online() {
+  # step 1: 安装必要的一些系统工具
+  yum install -y yum-utils device-mapper-persistent-data lvm2
+  # Step 2: 添加软件源信息
+  yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+  # Step 3: 更新并安装 Docker-CE
+  yum -y install docker-ce
+  # Step 4: 开启Docker服务
+  systemctl start docker
+  # Step 5: 设置Dokcer服务开启启用
+  systemctl enable docker
+  # Step 6: 配置Dokcer加速器
+  cat > /etc/docker/daemon.json << EOF
+{
+  "registry-mirrors": [
+    "https://dockerhub.azk8s.cn",
+    "https://docker.mirrors.ustc.edu.cn",
+    "http://hub-mirror.c.163.com"
+  ],
+  "max-concurrent-downloads": 10,
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+    },
+  "data-root": "/var/lib/docker"
+}
+EOF
+  # Step 7: 重启Docker服务器以生效
+  systemctl restart docker
+  # Step 8: 安装配置 docker-compose
+  curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  chmod +x /usr/local/bin/docker-compose
+  ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+}
+
+function package_docker_latest() {
+  mkdir -p /opt/docker-offline
+  yumdownloader --downloadonly docker-ce --destdir=/opt/docker-offline
+  curl -L "https://github.com/docker/compose/releases/download/1.28.4/docker-compose-$(uname -s)-$(uname -m)" -o /opt/docker-offline/docker-compose
 }
 
 # 用于升级 CentOS7 内核
@@ -146,6 +193,12 @@ function update_kernel() {
     awk -F\' '$1=="menuentry " {print $2}' /etc/grub2.cfg
     grub2-set-default 0
   fi
+}
+
+function init_git_config() {
+  git config --global user.email "1494136313@qq.com"
+  git config --global user.name "Etuloser"
+  echo "init git config success"
 }
 
 function init_docker_tpl() {
@@ -194,6 +247,18 @@ function main() {
     usage
   elif [[ "$1" == "-i" && "$#" == 2 ]]; then
     init_docker_tpl "$2"
+  elif [[ "$1" == "install" ]]; then
+    if [[ "$2" == "docker" ]]; then
+      install_docker_online
+    fi
+  elif [[ "$1" == "package" ]]; then
+    if [[ "$2" == "docker" ]]; then
+      package_docker_latest
+    fi
+  elif [[ "$1" == "init" ]]; then
+    if [[ "$2" == "git" ]]; then
+      init_git_config
+    fi
   else
     $@
   fi

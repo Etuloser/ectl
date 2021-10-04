@@ -17,6 +17,7 @@ export DOCKER_VER=18.09.7
 export REGISTRY_MIRROR=CN
 export KUBEASZ_VER=2.0.2
 export GOLANG_VERSION=1.17.1
+export NVIM_VERSION=0.5.1
 
 function install_docker() {
   # check if a container runtime is already installed
@@ -240,12 +241,13 @@ echo -e "\e[32mSuccess!\e[0m"
 }
 
 function install_neovim() {
-  curl -L "https://github.com/neovim/neovim/releases/download/v0.5.1/nvim-linux64.tar.gz" -o /opt/nvim-linux64.tar.gz
-  cd /opt
+  curl -L "https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux64.tar.gz" -o /usr/local/nvim-linux64.tar.gz
+  cd /usr/local
   tar -zxvf nvim-linux64.tar.gz
-  mv nvim-linux64 /usr/local
   ln -sf /usr/local/nvim-linux64/bin/nvim /usr/local/bin/nvim
   rm -f /opt/nvim-linux64.tar.gz
+  mkdir -p /root/.config/nvim
+  touch /root/.config/nvim/init.vim
   echo -e "\033[32mneovim install success.\033[0m"
 }
 

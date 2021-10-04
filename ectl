@@ -245,7 +245,7 @@ function install_neovim() {
   cd /usr/local
   tar -zxvf nvim-linux64.tar.gz
   ln -sf /usr/local/nvim-linux64/bin/nvim /usr/local/bin/nvim
-  rm -f /opt/nvim-linux64.tar.gz
+  rm -f /usr/local/nvim-linux64.tar.gz
   mkdir -p /root/.config/nvim
   touch /root/.config/nvim/init.vim
   echo -e "\033[32mneovim install success.\033[0m"

@@ -198,8 +198,6 @@ function update_kernel() {
 function init_git_config() {
   git config --global user.email "1494136313@qq.com"
   git config --global user.name "Etuloser"
-  # 配置Linux免登陆,输入一次后不需要再次输入
-  git config --global credential.helper store
   echo -e "\033[32m初始化成功.\033[0m"
 }
 

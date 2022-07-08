@@ -16,7 +16,7 @@ set -euo pipefail
 export DOCKER_VER=18.09.7
 export REGISTRY_MIRROR=CN
 export KUBEASZ_VER=2.0.2
-export GOLANG_VERSION=1.17.1
+export GOLANG_VERSION=1.18.3
 export NVIM_VERSION=0.5.1
 
 function install_docker() {
@@ -129,15 +129,15 @@ function usage() {
 cat <<  EOF
 Usage: ectl [options] [args]
   options: -{h}
-    -h		get help info
+  
   options: -{i} <dirname>
-    -i          init docker-compose file tpl
-  options: install <service>
-    install     install service online
+  
+  options: install {zsh|golang}
+    export GOLANG_VERSION=1.18.3 
   options: package <service>
-    package     package service
+    
   options: init {git}
-    init service environment
+    
 EOF
 }
 
@@ -265,15 +265,16 @@ function install_golang() {
   cd /usr/local
   tar -zxvf go${GOLANG_VERSION}.linux-amd64.tar.gz
   rm -f go${GOLANG_VERSION}.linux-amd64.tar.gz
-  cat  >> /etc/profile << EOF
+cat  >> /etc/profile << EOF
+
 # 配置环境变量
 export GOROOT="/usr/local/go"
-export PATH="$PATH:$GOROOT/bin"
+export PATH="\$PATH:\$GOROOT/bin"
 # 开启代理
 export GO111MODULE="on"
 export GOPROXY="https://goproxy.io"
 EOF
-  source /etc/profile
+source /etc/profile
 }
 
 #--- Main Func ------------------------------------

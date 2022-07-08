@@ -258,7 +258,15 @@ function install_ohmyzsh() {
   yum install -y zsh
   zsh --version
   sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-  echo -e "\033[32moh my zsh install success.\033[0m"
+  git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+  sed -i 's/plugins=(git)/plugins=(\n    git\n    zsh-autosuggestions\n)/g' ~/.zshrc
+cat >> ~/.zshrc << EOF
+bindkey ',' autosuggest-accept
+export TERM=xterm-256color
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=yellow,bg=bold"
+EOF
+  source ~/.zshrc
+  echo -e "\033[33moh my zsh install success.\033[0m"
 }
 
 function install_golang() {
@@ -270,7 +278,8 @@ cat  >> /etc/profile << EOF
 
 # 配置环境变量
 export GOROOT="/usr/local/go"
-export PATH="\$PATH:\$GOROOT/bin"
+export GOPATH="/root/go"
+export PATH="\$PATH:\$GOROOT/bin:\$GOPATH"
 # 开启代理
 export GO111MODULE="on"
 export GOPROXY="https://goproxy.io"

@@ -135,7 +135,9 @@ Usage: ectl [options] [args]
   options: install <service>
     install     install service online
   options: package <service>
-    package     package service 
+    package     package service
+  options: init {git}
+    init service environment
 EOF
 }
 
@@ -198,7 +200,7 @@ function update_kernel() {
 
 function init_git_config() {
   git config --global user.email "1494136313@qq.com"
-  git config --global user.name "Etuloser"
+  git config --global user.name "Eles"
   echo -e "\033[32m初始化成功.\033[0m"
 }
 

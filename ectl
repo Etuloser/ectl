@@ -202,7 +202,7 @@ function init_git_config() {
   git config --global user.email "1494136313@qq.com"
   git config --global user.name "Eles"
   git config --global credential.helper cache
-  echo -e "\033[32m初始化成功.\033[0m"
+  echo -e "\033[33m初始化成功.\033[0m"
 }
 
 function init_docker_tpl() {

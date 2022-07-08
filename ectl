@@ -201,7 +201,7 @@ function update_kernel() {
 function init_git_config() {
   git config --global user.email "1494136313@qq.com"
   git config --global user.name "Eles"
-  git config --global credential.helper cache
+  git config --global credential.helper store
   echo -e "\033[33m初始化成功.\033[0m"
 }
 
@@ -240,7 +240,7 @@ networks:
   internal:
     external: true
 EOF
-echo -e "\e[32mSuccess!\e[0m"
+echo -e "\e[33mSuccess!\e[0m"
 }
 
 function install_neovim() {

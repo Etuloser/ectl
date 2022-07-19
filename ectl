@@ -18,6 +18,7 @@ export REGISTRY_MIRROR=CN
 export KUBEASZ_VER=2.0.2
 export GOLANG_VERSION=1.18.3
 export NVIM_VERSION=0.5.1
+export OPENSSL_VERSION=1.1.1q
 
 function install_docker() {
   # check if a container runtime is already installed
@@ -123,22 +124,6 @@ function set_chrony() {
 # chronyc source -v
 # systemctl restart chronyd
   exit 0
-}
-
-function usage() {
-cat <<  EOF
-Usage: ectl [options] [args]
-  options: -{h}
-  
-  options: -{i} <dirname>
-  
-  options: install {zsh|golang}
-    export GOLANG_VERSION=1.18.3 
-  options: package <service>
-    
-  options: init {git}
-    
-EOF
 }
 
 function install_docker_online() {
@@ -287,6 +272,33 @@ EOF
 source /etc/profile
 }
 
+function install_openssl() {
+  curl -L https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o /usr/local/openssl-${OPENSSL_VERSION}.tar.gz
+  cd /usr/local
+  tar -zxvf openssl-${OPENSSL_VERSION}.tar.gz
+  rm -f openssl-${OPENSSL_VERSION}.tar.gz
+  cd openssl-${OPENSSL_VERSION}
+  ./config --prefix=/usr/local/openssl
+  make & make install
+}
+
+#--- Usage Func ------------------------------------
+function usage() {
+cat <<  EOF
+Usage: ectl [options] [args]
+  options: -{h}
+  
+  options: -{i} <dirname>
+  
+  options: install {zsh|golang|openssl}
+    export GOLANG_VERSION=1.18.3
+    export OPENSSL_VERSION=1.1.1q
+  options: package <service>
+    
+  options: init {git}
+    
+EOF
+}
 #--- Main Func ------------------------------------
 function main() {
   if [ "$#" == 0 ]; then
@@ -304,6 +316,8 @@ function main() {
       install_ohmyzsh
     elif [[ "$2" == "golang" ]]; then
       install_golang
+    elif [[ "$2" == "openssl" ]]; then
+      install_openssl
     fi
   elif [[ "$1" == "package" ]]; then
     if [[ "$2" == "docker" ]]; then

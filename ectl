@@ -240,18 +240,25 @@ function install_neovim() {
 }
 
 function install_ohmyzsh() {
-  yum install -y zsh
-  zsh --version
-  sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-  git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-  sed -i 's/plugins=(git)/plugins=(\n    git\n    zsh-autosuggestions\n)/g' ~/.zshrc
+  if [[ -d /root/.oh-my-zsh ]];
+  then
+    echo -e "\033[33m[INFO]oh my zsh already installed.\033[0m"
+    echo -e "\033[33m[INFO]plugins setup start.\033[0m"
+    git clone https://hub.fastgit.xyz/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    sed -i 's/plugins=(git)/plugins=(\n    git\n    zsh-autosuggestions\n)/g' ~/.zshrc
 cat >> ~/.zshrc << EOF
 bindkey ',' autosuggest-accept
 export TERM=xterm-256color
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=yellow,bg=bold"
 EOF
-  source ~/.zshrc
-  echo -e "\033[33moh my zsh install success.\033[0m"
+    echo -e "\033[33m[INFO]plugins setup success.\033[0m"
+    chsh -s /bin/zsh
+    source ~/.zshrc
+  else
+  yum install -y zsh
+  zsh --version
+  REMOTE=https://hub.fastgit.xyz/ohmyzsh/ohmyzsh.git sh -c "$(wget -O- https://raw.fastgit.org/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  fi
 }
 
 function install_golang() {

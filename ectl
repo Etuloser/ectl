@@ -19,6 +19,7 @@ export KUBEASZ_VER=2.0.2
 export GOLANG_VERSION=1.18.3
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
+export PYTHON3_VERSION=3.10.3
 
 function install_docker() {
   # check if a container runtime is already installed
@@ -286,7 +287,27 @@ function install_openssl() {
   rm -f openssl-${OPENSSL_VERSION}.tar.gz
   cd openssl-${OPENSSL_VERSION}
   ./config --prefix=/usr/local/openssl
-  make & make install
+  make
+  make install
+}
+
+function install_python3() {
+  if [[ -f ./assets/Python-${PYTHON3_VERSION}.tgz ]];then
+    echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz exist.\033[0m"
+    echo -e "\033[33m[INFO]start install.\033[0m"
+    tar -xvf ./assets/Python-${PYTHON3_VERSION}.tgz -C /opt/
+    cd /opt/Python-${PYTHON3_VERSION}
+    ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl
+    make
+    make install
+    mv /usr/bin/pip3 /usr/bin/pip3_old
+    mv /usr/bin/python3 /usr/bin/python3_old
+    ln -s /usr/local/python3/bin/python3 /usr/bin/python3
+    ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
+    python3 -m pip install pip --upgrade
+  else
+    wget https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz
+  fi
 }
 
 #--- Usage Func ------------------------------------
@@ -297,7 +318,7 @@ Usage: ectl [options] [args]
   
   options: -{i} <dirname>
   
-  options: install {zsh|golang|openssl}
+  options: install {zsh|golang|openssl|python3}
     export GOLANG_VERSION=1.18.3
     export OPENSSL_VERSION=1.1.1q
   options: package <service>
@@ -325,6 +346,8 @@ function main() {
       install_golang
     elif [[ "$2" == "openssl" ]]; then
       install_openssl
+    elif [[ "$2" == "python3" ]]; then
+      install_python3
     fi
   elif [[ "$1" == "package" ]]; then
     if [[ "$2" == "docker" ]]; then

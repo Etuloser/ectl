@@ -189,20 +189,39 @@ EOF
 }
 
 function install_openssl() {
-  curl -L https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o /usr/local/openssl-${OPENSSL_VERSION}.tar.gz
-  cd /usr/local
-  tar -zxvf openssl-${OPENSSL_VERSION}.tar.gz
-  rm -f openssl-${OPENSSL_VERSION}.tar.gz
-  cd openssl-${OPENSSL_VERSION}
-  ./config --prefix=/usr/local/openssl
-  make
-  make install
+  if [[ -d /usr/local/openssl  ]]; then
+    read -p "[INFO]openssl已存在,是否覆盖安装? yes/no." param
+    if [ $param == "yes" ];then
+      echo $param
+    else
+      exit 0
+    fi
+  else
+    curl -L https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz -o /usr/local/openssl-${OPENSSL_VERSION}.tar.gz
+    cd /usr/local
+    tar -zxvf openssl-${OPENSSL_VERSION}.tar.gz
+    rm -f openssl-${OPENSSL_VERSION}.tar.gz
+    cd openssl-${OPENSSL_VERSION}
+    ./config --prefix=/usr/local/openssl
+    make
+    make install
+    rm -rf /usr/local/openssl-${OPENSSL_VERSION}
+    echo -e "\033[33m[INFO]注意需要建立软链接,如:\033[0m"
+    echo -e "\033[33m[INFO]ln -s /usr/local/openssl/lib/libssl.so.1.1 /usr/lib64/libssl.so.1.1\033[0m"
+    echo -e "\033[33m[INFO]ln -s /usr/local/openssl/lib/libcrypto.so.1.1 /usr/lib64/libcrypt.so.1.1\033[0m"
+  fi
 }
 
 function install_python3() {
   if [[ -f ./assets/Python-${PYTHON3_VERSION}.tgz ]]; then
     echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz exist.\033[0m"
     echo -e "\033[33m[INFO]start install.\033[0m"
+    if [[ -d /usr/local/openssl ]]; then
+      echo -e "\033[33m[INFO]openssl exist\033[0m"
+    else
+      install_openssl
+    fi
+    sleep 1 
     tar -xvf ./assets/Python-${PYTHON3_VERSION}.tgz -C /opt/
     cd /opt/Python-${PYTHON3_VERSION}
     ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl

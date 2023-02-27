@@ -17,6 +17,7 @@ export GOLANG_VERSION=1.20.1
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
 export PYTHON3_VERSION=3.10.3
+export NODEJS_VERSION=18.14.2
 
 function set_chrony() {
   # vim /etc/chrony.conf
@@ -202,6 +203,34 @@ EOF
   fi
 }
 
+function install_nodejs() {
+  function do_nodejs_install() {
+    cd /opt
+    filename=node-v${NODEJS_VERSION}-linux-x64.tar.xz
+    wget https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz
+    tar -xf ${filename} -C /usr/local
+    rm -f ${filename}
+    cd /usr/local
+    echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
+  }
+  if [[ -d /usr/local/${filename}]]; then
+    version=$(node -v)
+    read -p "[INFO]$version 已存在,是否覆盖安装? yes/no." param
+    if [ $param == "yes" ];then
+      rm -rf /usr/local/${filename}
+      do_nodejs_install
+    else
+      exit 0
+    fi
+  else
+    do_nodejs_install
+    echo '\n#alias for cnpm\nalias cnpm="npm --registry=https://registry.npmmirror.com \
+  --cache=$HOME/.npm/.cache/cnpm \
+  --disturl=https://npmmirror.com/mirrors/node \
+  --userconfig=$HOME/.cnpmrc"' >> ~/.zshrc && source ~/.zshrc
+  fi
+}
+
 function install_openssl() {
   if [[ -d /usr/local/openssl  ]]; then
     read -p "[INFO]openssl已存在,是否覆盖安装? yes/no." param
@@ -259,9 +288,10 @@ Usage: ectl [options] [args]
   
   options: -{i} <dirname>
   
-  options: install {zsh|golang|openssl|python3}
-    export GOLANG_VERSION=1.18.3
-    export OPENSSL_VERSION=1.1.1q
+  options: install {zsh|golang|nodejs|openssl|python3}
+    export GOLANG_VERSION=${GOLANG_VERSION}
+    epxort NODEJS_VERSION=${NODEJS_VERSION}
+    export OPENSSL_VERSION=${OPENSSL_VERSION}
   options: package <service>
     
   options: init {git}
@@ -285,6 +315,8 @@ function main() {
       install_ohmyzsh
     elif [[ "$2" == "golang" ]]; then
       install_golang
+    elif [[ "$2" == "nodejs" ]]; then
+      install_nodejs
     elif [[ "$2" == "openssl" ]]; then
       install_openssl
     elif [[ "$2" == "python3" ]]; then

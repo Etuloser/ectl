@@ -17,7 +17,7 @@ export GOLANG_VERSION=1.20.1
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
 export PYTHON3_VERSION=3.10.3
-export NODEJS_VERSION=18.14.2
+export NODEJS_VERSION=17.9.1
 
 function set_chrony() {
   # vim /etc/chrony.conf
@@ -154,7 +154,7 @@ function install_ohmyzsh() {
   if [[ -d /root/.oh-my-zsh ]]; then
     echo -e "\033[33m[INFO]oh my zsh already installed.\033[0m"
     echo -e "\033[33m[INFO]plugins setup start.\033[0m"
-    git clone https://hub.fastgit.xyz/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
     sed -i 's/plugins=(git)/plugins=(\n    git\n    zsh-autosuggestions\n)/g' ~/.zshrc
     cat >>~/.zshrc <<EOF
 bindkey ',' autosuggest-accept
@@ -167,7 +167,7 @@ EOF
   else
     yum install -y zsh
     zsh --version
-    REMOTE=https://hub.fastgit.xyz/ohmyzsh/ohmyzsh.git sh -c "$(wget -O- https://raw.fastgit.org/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   fi
 }
 
@@ -204,32 +204,29 @@ EOF
 }
 
 function install_nodejs() {
+  filename=node-v${NODEJS_VERSION}-linux-x64.tar.xz
   function do_nodejs_install() {
-    cd /opt
-    filename=node-v${NODEJS_VERSION}-linux-x64.tar.xz
-    wget https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz
+    curl -L https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz -O ${filename}
     tar -xf ${filename} -C /usr/local
     rm -f ${filename}
     cd /usr/local
     mv node-v${NODEJS_VERSION}-linux-x64 node
     echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
   }
-  if [[ -d /usr/local/${filename}]]; then
+  if [[ -d /usr/local/node ]]; then
     version=$(node -v)
     read -p "[INFO]$version 已存在,是否覆盖安装? yes/no." param
-    if [ $param == "yes" ];then
-      rm -rf /usr/local/${filename}
+    if [ $param == "yes" ]; then
+      rm -rf /usr/local/node
       do_nodejs_install
     else
       exit 0
     fi
   else
     do_nodejs_install
-    cat >>/etc/profile <<EOF
-# nodejs settings
-export PATH="\$PATH:"
-EOF
-    echo '\n#alias for cnpm\nalias cnpm="npm --registry=https://registry.npmmirror.com \
+    echo "# nodejs settings" >> /etc/profile
+    echo "export PATH="$PATH:/usr/local/node/bin"" >> /etc/profile
+    echo 'alias for cnpm\nalias cnpm="npm --registry=https://registry.npmmirror.com \
   --cache=$HOME/.npm/.cache/cnpm \
   --disturl=https://npmmirror.com/mirrors/node \
   --userconfig=$HOME/.cnpmrc"' >> ~/.zshrc && source ~/.zshrc
@@ -261,7 +258,7 @@ function install_openssl() {
 }
 
 function install_python3() {
-  if [[ -f ./assets/Python-${PYTHON3_VERSION}.tgz ]]; then
+  if [[ -f Python-${PYTHON3_VERSION}.tgz ]]; then
     echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz exist.\033[0m"
     echo -e "\033[33m[INFO]start install.\033[0m"
     if [[ -d /usr/local/openssl ]]; then
@@ -270,7 +267,7 @@ function install_python3() {
       install_openssl
     fi
     sleep 1 
-    tar -xvf ./assets/Python-${PYTHON3_VERSION}.tgz -C /opt/
+    tar -xvf Python-${PYTHON3_VERSION}.tgz -C /opt/
     cd /opt/Python-${PYTHON3_VERSION}
     ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl
     make
@@ -279,9 +276,18 @@ function install_python3() {
     mv /usr/bin/python3 /usr/bin/python3_old
     ln -s /usr/local/python3/bin/python3 /usr/bin/python3
     ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
+cat >> ~/.pip/pip.conf <<EOF
+[global]
+index-url = https://mirrors.aliyun.com/pypi/simple/
+
+[install]
+trusted-host=mirrors.aliyun.com
+EOF
     python3 -m pip install pip --upgrade
+    rm -f Python-${PYTHON3_VERSION}.tgz
+    rm -rf /opt/Python-${PYTHON3_VERSION}
   else
-    wget https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz
+    curl -L https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz
   fi
 }
 

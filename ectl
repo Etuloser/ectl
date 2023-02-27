@@ -211,6 +211,7 @@ function install_nodejs() {
     tar -xf ${filename} -C /usr/local
     rm -f ${filename}
     cd /usr/local
+    mv node-v${NODEJS_VERSION}-linux-x64 node
     echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
   }
   if [[ -d /usr/local/${filename}]]; then
@@ -224,6 +225,10 @@ function install_nodejs() {
     fi
   else
     do_nodejs_install
+    cat >>/etc/profile <<EOF
+# nodejs settings
+export PATH="\$PATH:"
+EOF
     echo '\n#alias for cnpm\nalias cnpm="npm --registry=https://registry.npmmirror.com \
   --cache=$HOME/.npm/.cache/cnpm \
   --disturl=https://npmmirror.com/mirrors/node \

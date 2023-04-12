@@ -182,7 +182,7 @@ function install_golang() {
   if [[ -d /usr/local/go ]]; then
     version=$(go version)
     read -p "[INFO]$version 已存在,是否覆盖安装? yes/no." param
-    if [ $param == "yes" ];then
+    if [ $param == "yes" ]; then
       rm -rf /usr/local/go
       do_golang_install
     else
@@ -224,19 +224,19 @@ function install_nodejs() {
     fi
   else
     do_nodejs_install
-    echo "# nodejs settings" >> /etc/profile
-    echo "export PATH="$PATH:/usr/local/node/bin"" >> /etc/profile
+    echo "# nodejs settings" >>/etc/profile
+    echo "export PATH="$PATH:/usr/local/node/bin"" >>/etc/profile
     echo 'alias for cnpm\nalias cnpm="npm --registry=https://registry.npmmirror.com \
   --cache=$HOME/.npm/.cache/cnpm \
   --disturl=https://npmmirror.com/mirrors/node \
-  --userconfig=$HOME/.cnpmrc"' >> ~/.zshrc && source ~/.zshrc
+  --userconfig=$HOME/.cnpmrc"' >>~/.zshrc && source ~/.zshrc
   fi
 }
 
 function install_openssl() {
-  if [[ -d /usr/local/openssl  ]]; then
+  if [[ -d /usr/local/openssl ]]; then
     read -p "[INFO]openssl已存在,是否覆盖安装? yes/no." param
-    if [ $param == "yes" ];then
+    if [ $param == "yes" ]; then
       echo $param
     else
       exit 0
@@ -266,17 +266,17 @@ function install_python3() {
     else
       install_openssl
     fi
-    sleep 1 
+    sleep 1
     tar -xvf Python-${PYTHON3_VERSION}.tgz -C /opt/
     cd /opt/Python-${PYTHON3_VERSION}
-    ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl
+    ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl --enable-shared
     make
     make install
     mv /usr/bin/pip3 /usr/bin/pip3_old
     mv /usr/bin/python3 /usr/bin/python3_old
     ln -s /usr/local/python3/bin/python3 /usr/bin/python3
     ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
-cat >> ~/.pip/pip.conf <<EOF
+    cat >>~/.pip/pip.conf <<EOF
 [global]
 index-url = https://mirrors.aliyun.com/pypi/simple/
 
@@ -286,8 +286,11 @@ EOF
     python3 -m pip install pip --upgrade
     rm -f Python-${PYTHON3_VERSION}.tgz
     rm -rf /opt/Python-${PYTHON3_VERSION}
+    echo "/usr/local/python3/lib" >> /etc/ld.so.conf
+    ldconfig
   else
-    curl -L https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz
+    curl -L https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz -o Python-${PYTHON3_VERSION}.tgz
+    echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz download success call install python3 again.\033[0m"
   fi
 }
 

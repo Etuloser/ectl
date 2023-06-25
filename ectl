@@ -165,7 +165,11 @@ EOF
     chsh -s /bin/zsh
     source ~/.zshrc
   else
+  if command -v yum > /dev/null 2>&1; then
     yum install -y zsh
+  else
+    apt-get install -y zsh
+  fi
     zsh --version
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   fi

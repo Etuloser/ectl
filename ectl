@@ -16,7 +16,7 @@ set -euo pipefail
 export GOLANG_VERSION=1.20.1
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
-export PYTHON3_VERSION=3.10.3
+export PYTHON3_VERSION=3.11.4
 export NODEJS_VERSION=17.9.1
 
 function set_chrony() {
@@ -293,7 +293,7 @@ EOF
     echo "/usr/local/python3/lib" >> /etc/ld.so.conf
     ldconfig
   else
-    curl -L https://www.python.org/ftp/python/3.10.3/Python-3.10.3.tgz -o Python-${PYTHON3_VERSION}.tgz
+    curl -L https://www.python.org/ftp/python/3.10.3/Python-${PYTHON3_VERSION}.tgz -o Python-${PYTHON3_VERSION}.tgz
     echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz download success call install python3 again.\033[0m"
   fi
 }

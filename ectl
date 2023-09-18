@@ -209,13 +209,20 @@ EOF
 
 function install_nodejs() {
   filename=node-v${NODEJS_VERSION}-linux-x64.tar.xz
-  function do_nodejs_install() {
+  function do_nodejs_download() {
     curl -L https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz -O ${filename}
-    tar -xf ${filename} -C /usr/local
-    rm -f ${filename}
-    cd /usr/local
-    mv node-v${NODEJS_VERSION}-linux-x64 node
-    echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
+  }
+  function do_nodejs_install() {
+    if [[ -f $filename ]];then
+      tar -xf ${filename} -C /usr/local
+      rm -f ${filename}
+      cd /usr/local
+      mv node-v${NODEJS_VERSION}-linux-x64 node
+      echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
+    else
+      do_nodejs_download
+      do_nodejs_install
+    fi
   }
   if [[ -d /usr/local/node ]]; then
     version=$(node -v)

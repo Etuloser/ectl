@@ -186,25 +186,9 @@ EOF
 }
 
 function install_golang() {
-  function do_golang_install() {
-    curl -L https://studygolang.com/dl/golang/go${GOLANG_VERSION}.linux-amd64.tar.gz -o /usr/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
-    cd /usr/local
-    tar -zxvf go${GOLANG_VERSION}.linux-amd64.tar.gz
-    rm -f go${GOLANG_VERSION}.linux-amd64.tar.gz
-    echo -e "\033[33m[INFO]go${GOLANG_VERSION}安装完成.\033[0m"
-  }
-  if [[ -d /usr/local/go ]]; then
-    version=$(go version)
-    read -p "[INFO]$version 已存在,是否覆盖安装? yes/no." param
-    if [ $param == "yes" ]; then
-      rm -rf /usr/local/go
-      do_golang_install
-    else
-      exit 0
-    fi
-  else
-    do_golang_install
+  do_golang_setup() {
     cat >>/etc/profile <<EOF
+# go settings
 # 配置环境变量
 export GOROOT="/usr/local/go"
 export GOPATH="/root/go"
@@ -214,6 +198,27 @@ export GO111MODULE="on"
 export GOPROXY="https://proxy.golang.com.cn,direct"
 EOF
     source /etc/profile
+  }
+  do_golang_install() {
+    curl -L https://studygolang.com/dl/golang/go${GOLANG_VERSION}.linux-amd64.tar.gz -o /usr/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
+    cd /usr/local
+    tar -zxvf go${GOLANG_VERSION}.linux-amd64.tar.gz
+    rm -f go${GOLANG_VERSION}.linux-amd64.tar.gz
+    echo -e "\033[33m[INFO]go${GOLANG_VERSION}安装完成.\033[0m"
+    do_golang_setup
+  }
+  if command_exists go version; then
+    version=$(go version)
+    read -p "[INFO]$version 已存在,是否覆盖安装? yes/no." param
+    if [ $param == "yes" ]; then
+      go_folder_path=$(which go)
+      rm -rf ${go_folder_path:0:-9}
+      do_golang_install
+    else
+      do_golang_setup
+    fi
+  else
+    do_golang_install
   fi
 }
 

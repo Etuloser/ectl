@@ -296,8 +296,9 @@ function install_python3() {
       install_openssl
     fi
     sleep 1
-    tar -xvf Python-${PYTHON3_VERSION}.tgz -C /opt/
+    tar xvf Python-${PYTHON3_VERSION}.tgz -C /opt/
     cd /opt/Python-${PYTHON3_VERSION}
+    yum install -y libffi-devel bzip2-devel zlib-devel ncurses-devel gdbm-devel sqlite-devel readline-devel libuuid-devel xz-devel gcc-c++
     ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl --enable-shared
     make
     make install
@@ -318,7 +319,7 @@ EOF
     echo "/usr/local/python3/lib" >> /etc/ld.so.conf
     ldconfig
   else
-    curl -L https://www.python.org/ftp/python/3.10.3/Python-${PYTHON3_VERSION}.tgz -o Python-${PYTHON3_VERSION}.tgz
+    curl -L https://www.python.org/ftp/python/${PYTHON3_VERSION}/Python-${PYTHON3_VERSION}.tgz -o Python-${PYTHON3_VERSION}.tgz
     echo -e "\033[33m[INFO]Python-${PYTHON3_VERSION}.tgz download success call install python3 again.\033[0m"
   fi
 }

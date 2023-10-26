@@ -17,7 +17,7 @@ export GOLANG_VERSION=1.20.1
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
 export PYTHON3_VERSION=3.11.4
-export NODEJS_VERSION=20.6.1
+export NODEJS_VERSION=20.9.0
 
 # tools function
 command_exists() {
@@ -225,14 +225,15 @@ EOF
 install_nodejs() {
   filename=node-v${NODEJS_VERSION}-linux-x64.tar.xz
   do_nodejs_download() {
-    curl -L https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz -O /tmp/${filename}
+    curl -L https://nodejs.org/dist/v${NODEJS_VERSION}/node-v${NODEJS_VERSION}-linux-x64.tar.xz -o /tmp/${filename}
+    echo -e "\033[33m[INFO]Download success, run this script again.\033[0m"
   }
   do_nodejs_setup() {
     cat <<EOF
 手动执行以下命令将node添加到Path及切换淘宝源：
 echo 'export PATH="\$PATH:/usr/local/node/bin"' >> /etc/profile
-npm config set registry https://registry.npmmirror.com 
 source /etc/profile
+npm config set registry https://registry.npmmirror.com 
 EOF
   }
   do_nodejs_install() {
@@ -243,7 +244,7 @@ EOF
       echo -e "\033[33m[INFO]nodejs${NODEJS_VERSION}安装完成.\033[0m"
       do_nodejs_setup
     else
-      do_nodejs_install
+      do_nodejs_download
     fi
   }
   if command_exists node; then

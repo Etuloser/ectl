@@ -232,6 +232,7 @@ install_nodejs() {
     cat <<EOF
 手动执行以下命令将node添加到Path及切换淘宝源：
 echo 'export PATH="\$PATH:/usr/local/node/bin"' >> /etc/profile
+echo 'export NODE_OPTIONS=--openssl-legacy-provider' >> /etc/profile
 source /etc/profile
 npm config set registry https://registry.npmmirror.com 
 EOF

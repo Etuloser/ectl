@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -32,7 +33,11 @@ type OSReleaseInfo struct {
 func IsCommandExists(cmd string) (bool, error) {
 	_, err := GetOutput("command", "-v", cmd)
 	if err != nil {
-		return false, fmt.Errorf("%w", err)
+		if os.IsNotExist(err) {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
 	return true, nil
 }

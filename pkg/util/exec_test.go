@@ -16,7 +16,7 @@ func TestIsCommandExists(t *testing.T) {
 	zsh, err := IsCommandExists("zsh")
 	assert.Nil(t, err)
 	assert.True(t, zsh)
-	ruby, err := IsCommandExists("omz")
+	omz, err := IsCommandExists("omz")
 	assert.NotNil(t, err)
-	assert.False(t, ruby)
+	assert.False(t, omz)
 }

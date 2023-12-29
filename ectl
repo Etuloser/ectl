@@ -47,17 +47,21 @@ function install_docker_online() {
     echo "[ERROR] containerd is running, unsupported."
     exit 1
   }
-  # step 1: 安装必要的一些系统工具
-  yum install -y yum-utils device-mapper-persistent-data lvm2
-  # Step 2: 添加软件源信息
-  yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-  # Step 3: 更新并安装 Docker-CE
-  yum -y install docker-ce
-  # Step 4: 开启Docker服务
+  if command_exists yum; then
+    yum install -y yum-utils device-mapper-persistent-data lvm2
+    yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    yum -y install docker-ce
+  fi
+  if command_exists apt; then
+    sudo apt-get update
+    sudo apt-get -y install apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get -y update
+    sudo apt-get -y install docker-ce
+  fi
   systemctl start docker
-  # Step 5: 设置Dokcer服务开启启用
   systemctl enable docker
-  # Step 6: 配置Dokcer加速器
   cat >/etc/docker/daemon.json <<EOF
 {
   "registry-mirrors": [
@@ -75,11 +79,7 @@ function install_docker_online() {
   "data-root": "/var/lib/docker"
 }
 EOF
-  # Step 7: 重启Docker服务器以生效
   systemctl restart docker
-  # Step 8: 安装配置 docker-compose
-  python3 -m pip install --upgrade pip
-  pip3 install docker-compose
 }
 
 function package_docker_latest() {
@@ -104,10 +104,10 @@ function update_kernel() {
 }
 
 function init_git_config() {
-  git config --global user.email "1494136313@qq.com"
-  git config --global user.name "Eles"
-  git config --global init.defaultBranch main
-  git config --global credential.helper store
+  git clone https://github.com/Etuloser/econfig.git
+  mv econfig/.git-credentials ~
+  mv econfig/.gitconfig ~
+  rm -rf econfig
   echo -e "\033[33m初始化成功.\033[0m"
 }
 
@@ -181,7 +181,7 @@ EOF
     apt-get install -y zsh
   fi
     zsh --version
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    sh -c "$(curl -fsSL https://install.ohmyz.sh)"
   fi
 }
 

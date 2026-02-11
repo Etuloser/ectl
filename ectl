@@ -17,7 +17,7 @@ export GOLANG_VERSION=1.25.7
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
 export PYTHON3_VERSION=3.11.4
-export NODEJS_VERSION=20.9.0
+export NODEJS_VERSION=24.13.1
 
 # tools function
 command_exists() {

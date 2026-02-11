@@ -13,7 +13,7 @@
 set -euo pipefail
 
 # default version, can be overridden by cmd line options
-export GOLANG_VERSION=1.20.1
+export GOLANG_VERSION=1.25.7
 export NVIM_VERSION=0.5.1
 export OPENSSL_VERSION=1.1.1q
 export PYTHON3_VERSION=3.11.4
@@ -195,14 +195,14 @@ export GOPATH="/root/go"
 export PATH="\$PATH:\$GOROOT/bin:\$GOPATH"
 # 开启代理
 export GO111MODULE="on"
-export GOPROXY="https://proxy.golang.com.cn,direct"
+export GOPROXY="https://goproxy.cn,direct"
 EOF
     source /etc/profile
   }
   do_golang_install() {
     curl -L https://studygolang.com/dl/golang/go${GOLANG_VERSION}.linux-amd64.tar.gz -o /usr/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
     cd /usr/local
-    tar -zxvf go${GOLANG_VERSION}.linux-amd64.tar.gz
+    tar -zxf go${GOLANG_VERSION}.linux-amd64.tar.gz
     rm -f go${GOLANG_VERSION}.linux-amd64.tar.gz
     echo -e "\033[33m[INFO]go${GOLANG_VERSION}安装完成.\033[0m"
     do_golang_setup

@@ -161,28 +161,117 @@ function install_neovim() {
 }
 
 function install_ohmyzsh() {
-  if [[ -d /root/.oh-my-zsh ]]; then
-    echo -e "\033[33m[INFO]oh my zsh already installed.\033[0m"
-    echo -e "\033[33m[INFO]plugins setup start.\033[0m"
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    sed -i 's/plugins=(git)/plugins=(\n    git\n    zsh-autosuggestions\n)/g' ~/.zshrc
-    cat >>~/.zshrc <<EOF
-bindkey ',' autosuggest-accept
-export TERM=xterm-256color
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=yellow,bg=bold"
-EOF
-    echo -e "\033[33m[INFO]plugins setup success.\033[0m"
-    chsh -s /bin/zsh
-    source ~/.zshrc
-  else
-  if command -v yum > /dev/null 2>&1; then
-    yum install -y zsh
-  else
-    apt-get install -y zsh
-  fi
-    zsh --version
-    sh -c "$(curl -fsSL https://install.ohmyz.sh)"
-  fi
+    # 必须使用普通用户执行
+    if [[ "$EUID" -eq 0 ]]; then
+        echo -e "\033[31m[ERROR] Please run this function as a normal user, not root.\033[0m"
+        return 1
+    fi
+
+    local ZSH_DIR="$HOME/.oh-my-zsh"
+    local PLUGIN_DIR="$ZSH_DIR/custom/plugins/zsh-autosuggestions"
+    local ZSHRC="$HOME/.zshrc"
+    local ZSH_BIN
+
+    echo -e "\033[36m[INFO] Starting Oh My Zsh installation...\033[0m"
+
+    # 安装依赖
+    for cmd in git curl; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            echo "[INFO] Installing dependency: $cmd"
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update
+                sudo apt-get install -y "$cmd" || return 1
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y "$cmd" || return 1
+            else
+                echo "[ERROR] Unsupported package manager."
+                return 1
+            fi
+        fi
+    done
+
+    # 安装 Zsh
+    if ! command -v zsh >/dev/null 2>&1; then
+        echo "[INFO] Installing zsh..."
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y zsh || return 1
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y zsh || return 1
+        else
+            echo "[ERROR] Unsupported package manager."
+            return 1
+        fi
+    fi
+
+    ZSH_BIN="$(command -v zsh)"
+
+    # 安装 Oh My Zsh
+    if [[ -d "$ZSH_DIR" ]]; then
+        echo "[INFO] Oh My Zsh already installed."
+    else
+        echo "[INFO] Installing Oh My Zsh..."
+        RUNZSH=no CHSH=no \
+            sh -c "$(curl -fsSL https://install.ohmyz.sh)" || return 1
+    fi
+
+    if [[ ! -f "$ZSH_DIR/oh-my-zsh.sh" ]]; then
+        echo "[ERROR] Oh My Zsh installation failed."
+        return 1
+    fi
+
+    # 安装 zsh-autosuggestions
+    if [[ -d "$PLUGIN_DIR" ]]; then
+        echo "[INFO] zsh-autosuggestions already installed."
+    else
+        echo "[INFO] Installing zsh-autosuggestions..."
+        mkdir -p "$(dirname "$PLUGIN_DIR")"
+        git clone https://github.com/zsh-users/zsh-autosuggestions \
+            "$PLUGIN_DIR" || return 1
+    fi
+
+    # 创建 .zshrc
+    if [[ ! -f "$ZSHRC" ]]; then
+        cp "$ZSH_DIR/templates/zshrc.zsh-template" "$ZSHRC"
+    fi
+
+    # 配置插件
+    if grep -q '^plugins=' "$ZSHRC"; then
+        sed -i 's/^plugins=.*/plugins=(git zsh-autosuggestions)/' "$ZSHRC"
+    else
+        echo 'plugins=(git zsh-autosuggestions)' >> "$ZSHRC"
+    fi
+
+    # 配置 bindkey，保留逗号键接受自动建议
+    if ! grep -Fq "bindkey ',' autosuggest-accept" "$ZSHRC"; then
+        echo "bindkey ',' autosuggest-accept" >> "$ZSHRC"
+    fi
+
+    # 配置终端类型
+    if ! grep -q '^export TERM=' "$ZSHRC"; then
+        echo 'export TERM=xterm-256color' >> "$ZSHRC"
+    fi
+
+    # 配置自动建议颜色
+    if ! grep -q '^ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=' "$ZSHRC"; then
+        echo 'ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=yellow,bg=bold"' >> "$ZSHRC"
+    fi
+
+    # 修改当前用户默认 Shell
+    if [[ "$SHELL" != "$ZSH_BIN" ]]; then
+        echo "[INFO] Changing default shell to zsh..."
+        chsh -s "$ZSH_BIN" "$USER" || return 1
+    fi
+
+    # 修复配置文件属主
+    sudo chown "$USER:$(id -gn)" "$ZSHRC"
+
+    echo -e "\033[32m[INFO] Oh My Zsh installation completed successfully!\033[0m"
+    echo "[INFO] User: $USER"
+    echo "[INFO] Home: $HOME"
+    echo "[INFO] Shell: $ZSH_BIN"
+    echo "[INFO] Config: $ZSHRC"
+    echo "[INFO] Please restart your WSL terminal."
 }
 
 function install_golang() {
